@@ -1,10 +1,10 @@
 # 1. PACOTES
-pkg <- c('tidyverse', 'Quandl', 'tidyquant', 'quantmod',
-         'BETS', 'BatchGetSymbols', 'rvest')
+pkg <- c('Quandl', 'tidyquant', 'quantmod', 'BETS',
+         'BatchGetSymbols', 'rvest', 'tidyverse')
 
 lapply(pkg, function(x)
   if(!require(x, character.only = T))
-    {install.packages(x); require(x)})
+  {install.packages(x); require(x)})
 
 # 2. DADOS
 # API Key do Quandl
@@ -16,8 +16,12 @@ lapply(pkg, function(x)
 # Setores da Bolsa
 # trading.view_setores <- 'https://www.tradingview.com/markets/stocks-brazilia/sectorandindustry-sector/'
 # status.invest_setores <- 'https://statusinvest.com.br/acoes'
-fundamentus <- 'https://www.fundamentus.com.br/detalhes.php?papel='
 oceans.14 <- 'https://www.oceans14.com.br/acoes/'
+# investing.com <- 'https://br.investing.com/stock-screener/?sp=country::32|sector::a|industry::a|equityType::a|exchange::a%3Ceq_market_cap;1'
+fundamentus <- 'https://www.fundamentus.com.br/detalhes.php?papel='
+
+
+# # Tentativas mal sucedidas de raspagem: status.investing, investing.com, oceans.14
 
 # read_html(trading.view_setores) %>%
 #   html_nodes('.tv-screener__symbol') %>% 
@@ -25,25 +29,55 @@ oceans.14 <- 'https://www.oceans14.com.br/acoes/'
 #   str_to_lower(.) %>%
 #   str_replace_all(' ','-') -> setores
 
-read_html(fundamentus) %>%
-  html_node('.clearfix') %>%
-  html_table(.) -> bovespa
-
-paste0(fundamentus, bovespa[1,1]) %>%
-  read_html(.) %>%
-  html_node('.clearfix') %>%
-  html_table(.) %>% 
-  select(1,2) %>%
-  rename(Papel = 1) %>%
-  filter(str_detect(Papel,'(?i)Setor') |
-         str_detect(Papel,'(?i)Papel')) %>%
-  mutate(Papel = str_remove(Papel, '.?')) %>% 
-  pivot_wider()
+# read_html(investing.com) %>%
+#   html_node('#resultsContainer') %>%
+#   html_table(.) %>% View(.)
 
 # read_html(oceans.14) %>%
 #   html_nodes('.table-responsive') %>%
 #   html_table(.) -> bovespa
 
+
+# read_html(oceans.14) %>%
+#   html_node('.panel-body') %>%
+#   html_table(.) 
+
+read_html(fundamentus) %>%
+  html_node('.clearfix') %>%
+  html_table(.) -> bovespa
+
+# Obs: tentei pegar os setores de outro jeito, mas ainda não consegui
+# paste0(fundamentus, bovespa[1,1]) %>%
+#   read_html(.) %>%
+#   html_node('.clearfix') %>%
+#   html_table(.) %>%
+#   select(1,2) %>%
+#   dplyr::rename(Var = 1, Value = 2) %>%
+#   filter(str_detect(Var,'(?i)Setor') |
+#          str_detect(Var,'(?i)Papel')) %>%
+#   mutate(Var = str_remove(Var,'\\?'),
+#          Value = str_remove(Value,'\\?')) %>%
+#   pivot_wider(names_from = Var,
+#               values_from = Value)
+
+lapply(bovespa$Papel[1:10], function(x){
+  
+  paste0(fundamentus, x) %>%
+    read_html(.) %>%
+    html_node('.clearfix') %>%
+    html_table(.) %>%
+    select(1,2) %>%
+    dplyr::rename(Var = 1, Value = 2) %>%
+    filter(str_detect(Var,'(?i)Setor') |
+             str_detect(Var,'(?i)Papel')) %>%
+    mutate(Var = str_remove(Var,'\\?'),
+           Value = str_remove(Value,'\\?')) %>%
+    pivot_wider(names_from = Var,
+                values_from = Value)
+  
+  }) %>% bind_rows(.) %>% select(1:3) -> teste
+
+  
 # read_html('https://www.tradingview.com/screener/') %>%
 #   html_nodes('.tv-data-table__tbody') %>%
 #   html_table(.) -> bovespa
