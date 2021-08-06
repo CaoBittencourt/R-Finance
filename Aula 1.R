@@ -109,7 +109,9 @@ get.sector <- function(link.setor = 'https://www.fundamentus.com.br/resultado.ph
       bind_rows(.) %>% 
       mutate(Setor = row_number()) -> nomes
     
-    merge(setores, nomes) -> setores}
+    merge(setores, nomes) %>%
+      select(-Setor) %>%
+      rename(Setor = value) -> setores}
   
   return(setores)
   
@@ -148,14 +150,26 @@ get.subsector <- function(link.segmentos = 'https://www.fundamentus.com.br/resul
       bind_rows(.) %>% 
       mutate(Subsetor = row_number()) -> nomes
     
-    merge(segmentos, nomes) -> segmentos}
+    merge(segmentos, nomes) %>%
+      select(-Subsetor) %>%
+      rename(Subsetor = value) -> segmentos}
   
   return(segmentos)
   
 }
 
-get.sector(n.setor = 1:3) %>%
-  merge()
+merge(get.sector(n.setor = 1:3), get.subsector(n.subsetor = 1:3)) -> lala
 
+
+# first.date <- Sys.Date() - 60
+# last.date <- Sys.Date()
+# freq.data <- 'daily'
+# str_remove(lala$Papel, '[[:digit:]]+')
+# BatchGetSymbols(tickers =  str_remove(lala$Papel, '[[:digit:]]+'), 
+#                 first.date = first.date,
+#                 last.date = last.date, 
+#                 freq.data = freq.data,
+#                 cache.folder = file.path(tempdir(), 
+#                                          'BGS_Cache')) -> acoes
 
 
