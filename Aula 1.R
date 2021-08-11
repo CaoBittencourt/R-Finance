@@ -1,6 +1,6 @@
 # 1. PACOTES
-pkg <- c('Quandl', 'tidyquant', 'quantmod', 'BETS',
-         'BatchGetSymbols', 'rvest', 'tidyverse')
+pkg <- c('Quandl', 'quantmod', 'BETS', 'BatchGetSymbols',
+         'PerformanceAnalytics', 'tidyquant', 'rvest', 'tidyverse')
 
 lapply(pkg, function(x)
   if(!require(x, character.only = T))
@@ -172,4 +172,16 @@ merge(get.sector(n.setor = 1:3), get.subsector(n.subsetor = 1:3)) -> lala
 #                 cache.folder = file.path(tempdir(), 
 #                                          'BGS_Cache')) -> acoes
 
+
+
+# Tidyquant
+
+# Ad
+# tidyquant::tq_portfolio()
+
+# Perfomance Analytics
+
+# PerformanceAnalytics::CalculateReturns()
+# PerformanceAnalytics::Return.portfolio()
+# PerformanceAnalytics::CAPM.alpha()
 
