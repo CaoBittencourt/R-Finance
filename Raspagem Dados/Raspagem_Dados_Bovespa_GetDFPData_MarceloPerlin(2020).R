@@ -146,6 +146,70 @@ lapply(teste, function(df, nivel_especificidade = 1){
 }) -> teste
 
 # 3. ALGORITMOS DE VALUATION
+# # # FLUXO DE CAIXA DESCONTADO (FDC/DCF)
+
+# # # MÚLTIPLOS DE MERCADO
+
+# # Preço por lucro
+# P/L = Preço / lucro por ação
+
+# # Múltiplo do Valor patrimonial
+# P/VPA = Preço de mercado/patrimônio líquido por ação
+# Valores importantes:
+# P/VPA > 1 => mercado valoriza a empresa além da equivalência patrimonial (i.e. acrescenta um bônus ao preço)
+# P/VPA < 1 => mercado valoriza a empresa abaixo da equivalência patrimonial (i.e. acrescenta uma penalidade ao preço)
+# P/VPA = 1 => mercado valoriza a empresa exatamente na equivalência patrimonial (i.e. sem bönus nem penalidade ao preço)
+
+# # DIVIDEND YIELD
+# Dividend yield = Dividendo pago por ação / Preço por unidade de ação
+
+# # ENTERPRISE VALUE POR EBITDA
+# EV/EBITDA = (Enteprise Value/Earnings Before Taxes Interest Depreciation and Amortization).
+# EV = valor de mercado da empresa = preço da ação * número de ações (i.e. o quanto o consenso do mercado diz que a empresa vale) + DÍVIDAS (BP) - CAIXA (BP)
+# EBITDA = lucratividade da empresa (desconsiderando variáveis que não têm a ver com a sua operação)
+# Quanto menor o EV/EBITDA, melhor (comparar setorialmente apenas)
+
+
+# # # AVALIAÇÃO CONTÁBIL
+# # # AVALIAÇÃO DE LIQUIDAÇÃO
+
+# # # INDICADORES IMPORTANTES
+# # Retorno da empresa
+# ROE (Return on Equity) = capacidade da empresa de agregar valor (gerar retorno) para o capital próprio investido
+# ROE = LUCRO LÍQUIDO (DRE) / PATRIMONIO LIQUIDO (BP) = LL/PL
+# Valores importantes:
+# ROE > 10% = "boa empresa" 
+# ROE > 15% = "empresa muito boa" 
+# E assim por diante (comparar setorialmente)
+
+# ROIC (Return on Invested Capital) = medida de desempenho financeiro da empresa (considerando todo o capital investido, incluindo o de terceiros)
+# ROIC = Resultado Operacional / Valor Contábil do Capital Investido.
+
+
+# # Endividamento/Liquidez da empresa
+# Dívida Líquida
+# DL = DIVIDA TOTAL - CAIXA (BP)
+
+# Dívida Líquida sobre Patrimônio Liquido
+# DL/PL = alavangem/endividamento
+# Valores importantes:
+# DL/PL = 50% = alavancagem de 0.5 (metade da empresa não pertence à empresa)
+# DL/PL = 100% = empresa 100% alavancada (tudo na empresa é dívida)
+# Geralmente, quando menor melhor (e.g. DL/PL < 50%)
+
+# # MARGENS
+# Margem Bruta = rentabilidade após os custos (quanto de cada R$1,00 de receita sobreviveu às despesas da firma e virou lucro efetivamente)
+# MB = Lucro Bruto (DRE) / Receita Líquida (DRE) = LB/RL
+
+# Margem Operacional = lucro operacional obtido para cada unidade de venda realizada (i.e. quão rentável é a *operação* da firma)
+# MO = Resultado operacional (DRE) / Receita Líquida (DRE)
+# Geralmente, margem maior, firma mais lucrativa
+# Exceção: quando a empresa diminui a margem para ganhar espaço no mercado (e.g. expansão, aquisição, marketing etc)
+
+# Margem Líquida = idem margem bruta, mas considerando apenas quando % de cada R$1,00 converteu-se em lucro *líquido* (tendo em vista todas as demais despesas da firma, e.g. impostos, depreciações)
+# ML = Lucro Liquido (DRE) / Receita Líquida (DRE) = LL/RL
+# Geralmente, quanto maior melhor (regra de bolso: > 10%)
+
 # 4. VALUATION SETORIAL
 # 5. VISUALIZAÇÕES DIVERSAS
 # Exemplo
