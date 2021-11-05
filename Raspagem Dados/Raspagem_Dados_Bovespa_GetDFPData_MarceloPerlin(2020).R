@@ -36,6 +36,7 @@ ano.inicial <- ano.passado - anos.escopo
 bovespa.empresas.ativas.info %>%
   mutate(across(.cols = starts_with('DT'),
                 .fns = dmy)) %>%
+  group_by(CD_CVM) %>%
   filter(year(today()) - year(DT_CONST) >= anos.escopo) -> bovespa.empresas.ativas.info
 
 # Setores de Atuação
@@ -103,7 +104,7 @@ bovespa.empresas.ativas.info %>%
                cache_folder = tempdir()) -> teste
 
 # LIMPEZA DOS DADOS -------------------------------------------------------
-# teste.backup <- teste
+teste.backup <- teste
 # teste.backup -> teste
 
 # 2. Limpeza e modificação dos dados
@@ -115,6 +116,17 @@ lapply(teste, function(df){
     group_by(CD_CVM, CNPJ_CIA) %>% 
     # Toma-se o nome mais recente para atualizar os demais
     mutate(DENOM_CIA = DENOM_CIA[which.max(DT_FIM_EXERC)])}) -> teste 
+
+# Nomes das contas
+lapply(teste, function(df){
+  
+  df %>%
+    mutate(
+      DS_CONTA = str_squish(DS_CONTA) # trim_ws fora e dentro
+      ,DS_CONTA = str_to_lower(DS_CONTA) # letra minuscula
+    ) 
+  
+}) -> teste
 
 # If MIL => Multiplicar valores das contas por mil
 # Obs: checar depois se existem outras escalas além de milhares de R$
@@ -131,6 +143,14 @@ lapply(teste, function(df){
   
 }) -> teste
 
+# NA = 0
+lapply(teste, function(df){
+  
+  df %>%
+    mutate(VL_CONTA = replace_na(VL_CONTA, 0)) # NA = 0
+  
+}) -> teste
+
 # Remover colunas indesejadas + adicionar o Nível de especificidade das contas 
 lapply(teste, function(df){
   
@@ -144,18 +164,19 @@ lapply(teste, function(df){
 }) -> teste
 
 # Dataframe Final: Girar em valores das contas (wide) + Nível de especificidade das contas
-lapply(teste, function(df, nivel_especificidade = 1){
+lapply(teste, function(df, nivel_especificidade = 2){
   
   df %>% 
     filter(LVL_CONTA <= nivel_especificidade) %>% # apenas as contas dentro do nivel de especificididade indicado
     select(-LVL_CONTA) %>% # remoção do nível de especificidade para facilitar operações com o df
-    pivot_wider(names_from = c(CD_CONTA, DS_CONTA),
-                values_from = VL_CONTA,
-                names_sort = T) # cada conta = uma coluna
+    pivot_wider(names_from = c(CD_CONTA
+                               , DS_CONTA
+    ),
+    values_from = VL_CONTA,
+    names_sort = T) # cada conta = uma coluna
   
 }) -> teste
 
-# Obs: trim_ws nos nomes das contas
 # Obs: por vezes, verifica-se irregularidades nos nomes das contas (além whitespace)
 # Solução: usar código das contas (ver se existem irregularidades também) e/ou usar contains("parte do nome da conta") ao manipular os dados
 
@@ -263,9 +284,9 @@ teste$`DF Consolidado - Demonstração do Resultado` %>%
   scale_y_continuous(labels = scales::label_dollar(prefix = 'R$',
                                                    suffix = ' Bi',
                                                    scale = 1/1000000000)) +
-labs(title = glue('EBITDA (R$ Bi, {ano.inicial}-{ano.passado})'),
-     caption = 'Fonte: CVM (dados importados com o pacote GetDFPData2).') +
-ggthemes::theme_economist()
+  labs(title = glue('EBITDA (R$ Bi, {ano.inicial}-{ano.passado})'),
+       caption = 'Fonte: CVM (dados importados com o pacote GetDFPData2).') +
+  ggthemes::theme_economist()
 
 
 # BIBLIOGRAFIA (alguns exemplos) ------------------------------------------
@@ -282,4 +303,66 @@ ggthemes::theme_economist()
 # https://www.business-science.io/finance/2020/02/21/tidy-discounted-cash-flow.html
 
 
+
+
+
+teste$`DF Consolidado - Balanço Patrimonial Ativo` %>%
+  filter(grepl('estoque',DS_CONTA)) %>% 
+  group_by(CD_CVM, DT_FIM_EXERC) %>% 
+  select(CD_CONTA, DS_CONTA, VL_CONTA) %>% View(.)
+
+
+select(
+  .data = teste$`DF Consolidado - Demonstração do Resultado`
+  ,contains('3_11_lucro/preju')
+) / 
+  select(
+    .data = teste$`DF Consolidado - Balanço Patrimonial Passivo`
+    ,contains('2_03_patrim')
+  )
+
+
+roe <- function(
+  DRE = teste$`DF Consolidado - Demonstração do Resultado`
+  ,BPP = teste$`DF Consolidado - Balanço Patrimonial Passivo`
+  ,net_profit = '`3_11_lucro/prejuízo consolidado do período`'
+  ,net_worth = '`2_03_patrimônio líquido consolidado`'
+){
+  
+  
+  DRE %>% 
+    group_by(CD_CVM, DT_FIM_EXERC) %>% 
+    select(eval(net_profit)) %>% return(.)
+  
+  # DRE %>%
+  #   group_by(CD_CVM, DT_FIM_EXERC) %>%
+  #   select_(net_profit) -> DF.LL
+  # 
+  # BPP %>%
+  #   group_by(CD_CVM, DT_FIM_EXERC) %>%
+  #   select_(net_worth) -> DF.PL
+  # 
+  # merge(DF.LL, DF.PL) -> DF.ROE
+  # 
+  # DF.ROE %>% 
+  #   mutate_(ROE = as.name(net_profit)/as.name(net_worth)) %>%
+  #   return(.)
+  # 
+}
+
+roe()
+
+teste$sym('`DF Consolidado - Balanço Patrimonial Ativo`')
+
+Map(
+  function(num, div){return(num/div)}
+  , num = list(
+    'Liquidez_Corrente' = teste$`DF Consolidado - Balanço Patrimonial Ativo`$`1_01_ativo circulante`
+    , 'Liquidez_Seca' = (teste$`DF Consolidado - Balanço Patrimonial Ativo`$`1_01_ativo circulante` - teste$`DF Consolidado - Balanço Patrimonial Ativo`$`1_01_04_estoques`)
+  )
+  , div = list(
+    teste$`DF Consolidado - Balanço Patrimonial Passivo`$`2_01_passivo circulante`
+    ,teste$`DF Consolidado - Balanço Patrimonial Passivo`$`2_01_passivo circulante`
+  )
+) %>% bind_cols(.)
 
