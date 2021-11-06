@@ -4,10 +4,13 @@
 # => lapply(lista_dfs, val_function(group_by(setor,empresa)))
 
 
+# !!!FAZER UM RECODE DE NOMES PARA OS SETORES!!!
+# ALGUNS NOMES DE SETORES SÃO GRANDES DEMAIS
+
 # PACOTES -----------------------------------------------------------------
 pkg <- c('quantmod', 'BatchGetSymbols',  
          'PerformanceAnalytics',
-         'tidyquant', 'GetDFPData2', #'GetBCBData', #'GetHFData ', 
+         'tidyquant', 'GetDFPData2', 'GetBCBData', #'GetHFData ', 
          'ggthemes', 'scales', 'glue', 'tidyverse')
 
 lapply(pkg, function(x)
@@ -23,7 +26,7 @@ lapply(pkg, function(x)
 # Empresas ainda ativas
 get_info_companies(cache_folder = tempdir()) %>%
   filter(SIT_REG == 'ATIVO') -> bovespa.empresas.ativas.info
-GetDFPData2::search_company('Itausa')
+
 # Dados disponíveis (de maneira conveniente) a partir de 2010 (vide http://dados.cvm.gov.br/dados/CIA_ABERTA/)
 # => Escopo máximo = 10 anos
 # Empresas com mais de 10 anos de atividade
@@ -103,13 +106,22 @@ setores.teste %>%
 #                use_memoise = T,
 #                cache_folder = tempdir()) -> teste
 
-get_dfp_data(companies_cvm_codes = c(7617, 5410, 9512, 4170)
+bovespa.empresas.ativas.info %>% 
+  select(CD_CVM, DENOM_SOCIAL, DENOM_COMERC, SETOR_ATIV) %>% 
+  mutate(DENOM_COMERC = ifelse(is.na(DENOM_COMERC)
+                               , yes = DENOM_SOCIAL
+                               , no = DENOM_COMERC)) -> SETOR_ATIV_CVM
+
+get_dfp_data(
+  # companies_cvm_codes = c(7617, 5410, 9512, 4170)
+  companies_cvm_codes = sample(SETOR_ATIV_CVM$CD_CVM, 50)
              ,first_year = ano.inicial
              ,last_year = ano.passado
              ,type_docs = c('DRE', 'BPA', 'BPP', 'DFC_MI')
              ,type_format = 'con'
              ,use_memoise = T
              ,cache_folder = tempdir()) -> teste
+
 
 # LIMPEZA DOS DADOS -------------------------------------------------------
 teste.backup <- teste
@@ -170,6 +182,21 @@ lapply(teste, function(df){
            # GRUPO_DFP, 
            CD_CONTA, LVL_CONTA, DS_CONTA, VL_CONTA) # Contas e Valores
   
+  
+}) -> teste
+
+# Adicionar setor de atividade
+lapply(teste, function(df){
+  
+  df %>% 
+    pull(CD_CVM) %>% 
+    unique(.) -> empresas
+  
+  SETOR_ATIV_CVM %>%
+    filter(CD_CVM %in% empresas) %>%
+    summarise(across(.fns = unique)) -> SETOR_ATIV_CVM
+  
+    full_join(df, SETOR_ATIV_CVM) %>% return(.)
   
 }) -> teste
 
