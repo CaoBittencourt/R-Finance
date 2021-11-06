@@ -23,7 +23,7 @@ lapply(pkg, function(x)
 # Empresas ainda ativas
 get_info_companies(cache_folder = tempdir()) %>%
   filter(SIT_REG == 'ATIVO') -> bovespa.empresas.ativas.info
-
+GetDFPData2::search_company('Itausa')
 # Dados disponíveis (de maneira conveniente) a partir de 2010 (vide http://dados.cvm.gov.br/dados/CIA_ABERTA/)
 # => Escopo máximo = 10 anos
 # Empresas com mais de 10 anos de atividade
@@ -93,15 +93,23 @@ setores.teste %>%
   sample(1) -> setor.teste
 
 # 4x Companhias aleatórias
-bovespa.empresas.ativas.info %>% 
-  filter(SETOR_ATIV == setor.teste) %>%
-  pull(CD_CVM) %>% sample(4) %>% 
-  get_dfp_data(first_year = ano.inicial,
-               last_year = ano.passado,
-               type_docs = c('DRE', 'BPA', 'BPP', 'DFC_MD'),
-               type_format = 'con',
-               use_memoise = T,
-               cache_folder = tempdir()) -> teste
+# bovespa.empresas.ativas.info %>% 
+#   filter(SETOR_ATIV == setor.teste) %>%
+#   pull(CD_CVM) %>% sample(4) %>% 
+#   get_dfp_data(first_year = ano.inicial,
+#                last_year = ano.passado,
+#                type_docs = c('DRE', 'BPA', 'BPP', 'DFC_MD'),
+#                type_format = 'con',
+#                use_memoise = T,
+#                cache_folder = tempdir()) -> teste
+
+get_dfp_data(companies_cvm_codes = c(7617, 5410, 9512, 4170)
+             ,first_year = ano.inicial
+             ,last_year = ano.passado
+             ,type_docs = c('DRE', 'BPA', 'BPP', 'DFC_MI')
+             ,type_format = 'con'
+             ,use_memoise = T
+             ,cache_folder = tempdir()) -> teste
 
 # LIMPEZA DOS DADOS -------------------------------------------------------
 teste.backup <- teste
@@ -157,23 +165,23 @@ lapply(teste, function(df){
   df %>%
     mutate(LVL_CONTA = str_count(CD_CONTA, '\\.')) %>% # Nível de especificidade das contas
     select(CNPJ_CIA, CD_CVM, DENOM_CIA, # ID Companhia
-           DT_REFER, DT_INI_EXERC, DT_FIM_EXERC, # Datas
-           GRUPO_DFP, CD_CONTA, LVL_CONTA, DS_CONTA, VL_CONTA) # Contas e Valores
+           # DT_REFER, 
+           DT_INI_EXERC, DT_FIM_EXERC, # Datas
+           # GRUPO_DFP, 
+           CD_CONTA, LVL_CONTA, DS_CONTA, VL_CONTA) # Contas e Valores
   
   
 }) -> teste
 
 # Dataframe Final: Girar em valores das contas (wide) + Nível de especificidade das contas
-lapply(teste, function(df, nivel_especificidade = 2){
+lapply(teste, function(df, nivel_especificidade = 50){
   
   df %>% 
     filter(LVL_CONTA <= nivel_especificidade) %>% # apenas as contas dentro do nivel de especificididade indicado
     select(-LVL_CONTA) %>% # remoção do nível de especificidade para facilitar operações com o df
-    pivot_wider(names_from = c(CD_CONTA
-                               , DS_CONTA
-    ),
-    values_from = VL_CONTA,
-    names_sort = T) # cada conta = uma coluna
+    pivot_wider(names_from = c(CD_CONTA, DS_CONTA),
+                values_from = VL_CONTA,
+                names_sort = T) # cada conta = uma coluna
   
 }) -> teste
 
