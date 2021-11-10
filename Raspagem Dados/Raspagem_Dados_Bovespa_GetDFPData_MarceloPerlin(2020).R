@@ -36,23 +36,23 @@ anos.escopo <- 10
 ano.passado <- year(today()) - 1
 ano.inicial <- ano.passado - anos.escopo
 
-bovespa.empresas.ativas.info %>%
-  mutate(across(.cols = starts_with('DT'),
-                .fns = dmy)) %>%
-  group_by(CD_CVM) %>%
-  filter(year(today()) - year(DT_CONST) >= anos.escopo) -> bovespa.empresas.ativas.info
+# bovespa.empresas.ativas.info %>%
+#   mutate(across(.cols = starts_with('DT'),
+#                 .fns = dmy)) %>%
+#   group_by(CD_CVM) %>%
+#   filter(year(today()) - year(DT_CONST) >= anos.escopo) -> bovespa.empresas.ativas.info
 
 # Setores de Atuação
-bovespa.empresas.ativas.info %>%
-  pull(SETOR_ATIV) %>% unique(.) -> setores
+# bovespa.empresas.ativas.info %>%
+#   pull(SETOR_ATIV) %>% unique(.) -> setores
 
 # Teste: Setores com mais de 4 empresas
-bovespa.empresas.ativas.info %>%
-  group_by(SETOR_ATIV) %>% 
-  tally(.) %>% 
-  filter(n >= 4) %>%
-  arrange(n) %>%
-  pull(SETOR_ATIV) -> setores.teste
+# bovespa.empresas.ativas.info %>%
+#   group_by(SETOR_ATIV) %>% 
+#   tally(.) %>% 
+#   filter(n >= 4) %>%
+#   arrange(desc(n)) %>%
+#   pull(SETOR_ATIV) -> setores.teste
 
 
 # bovespa.empresas.ativas.info %>%
@@ -92,8 +92,8 @@ bovespa.empresas.ativas.info %>%
 #              cache_folder = tempdir())
 
 # 1x Setor aleatório
-setores.teste %>%
-  sample(1) -> setor.teste
+# setores.teste %>%
+#   sample(1) -> setor.teste
 
 # 4x Companhias aleatórias
 # bovespa.empresas.ativas.info %>% 
@@ -106,6 +106,7 @@ setores.teste %>%
 #                use_memoise = T,
 #                cache_folder = tempdir()) -> teste
 
+
 bovespa.empresas.ativas.info %>% 
   select(CD_CVM, DENOM_SOCIAL, DENOM_COMERC, SETOR_ATIV) %>% 
   mutate(DENOM_COMERC = ifelse(is.na(DENOM_COMERC)
@@ -113,14 +114,14 @@ bovespa.empresas.ativas.info %>%
                                , no = DENOM_COMERC)) -> SETOR_ATIV_CVM
 
 get_dfp_data(
-  # companies_cvm_codes = c(7617, 5410, 9512, 4170)
-  companies_cvm_codes = sample(SETOR_ATIV_CVM$CD_CVM, 50)
-             ,first_year = ano.inicial
-             ,last_year = ano.passado
-             ,type_docs = c('DRE', 'BPA', 'BPP', 'DFC_MI')
-             ,type_format = 'con'
-             ,use_memoise = T
-             ,cache_folder = tempdir()) -> teste
+  companies_cvm_codes = c(7617, 5410, 9512, 4170)
+  # companies_cvm_codes = sample(SETOR_ATIV_CVM$CD_CVM, 50)
+  ,first_year = ano.inicial
+  ,last_year = ano.passado
+  ,type_docs = c('DRE', 'BPA', 'BPP', 'DFC_MI')
+  ,type_format = 'con'
+  ,use_memoise = T
+  ,cache_folder = tempdir()) -> teste
 
 
 # LIMPEZA DOS DADOS -------------------------------------------------------
@@ -175,12 +176,14 @@ lapply(teste, function(df){
 lapply(teste, function(df){
   
   df %>%
-    mutate(LVL_CONTA = str_count(CD_CONTA, '\\.')) %>% # Nível de especificidade das contas
-    select(CNPJ_CIA, CD_CVM, DENOM_CIA, # ID Companhia
-           # DT_REFER, 
-           DT_INI_EXERC, DT_FIM_EXERC, # Datas
-           # GRUPO_DFP, 
-           CD_CONTA, LVL_CONTA, DS_CONTA, VL_CONTA) # Contas e Valores
+    mutate(
+      LVL_CONTA = str_count(CD_CONTA, '\\.') # Nível de especificidade das contas
+      ) %>% 
+    select(
+      CNPJ_CIA, CD_CVM, DENOM_CIA, # ID Companhia
+      DT_INI_EXERC, DT_FIM_EXERC, # Datas
+      CD_CONTA, LVL_CONTA, DS_CONTA, VL_CONTA # Contas e Valores
+    ) 
   
   
 }) -> teste
@@ -196,7 +199,7 @@ lapply(teste, function(df){
     filter(CD_CVM %in% empresas) %>%
     summarise(across(.fns = unique)) -> SETOR_ATIV_CVM
   
-    full_join(df, SETOR_ATIV_CVM) %>% return(.)
+  full_join(df, SETOR_ATIV_CVM) %>% return(.)
   
 }) -> teste
 
@@ -212,10 +215,7 @@ lapply(teste, function(df, nivel_especificidade = 50){
   
 }) -> teste
 
-# Obs: por vezes, verifica-se irregularidades nos nomes das contas (além whitespace)
-# Solução: usar código das contas (ver se existem irregularidades também) e/ou usar contains("parte do nome da conta") ao manipular os dados
 
-# depois disso, GetBatchSymbols/quantmod/etc para pegar as cotações dentro do escopo => df_cotacoes
 
 # ALGORITMOS DE VALUATION -------------------------------------------------
 # 1. FLUXO DE CAIXA DESCONTADO (FDC/DCF)
