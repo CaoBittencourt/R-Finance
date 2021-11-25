@@ -2,6 +2,7 @@
 pkg <- c(
   'BatchGetSymbols', 'GetDFPData2' #Dados financeiros (preços e demonstrativos)
   ,'ggthemes', 'scales' #Visualização
+  # , 'simfinR' #, 'simfinapi'
   ,'lubridate' ,'tidyverse' #Manipulação de dados e datas
   )
 
